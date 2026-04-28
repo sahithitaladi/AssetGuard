@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AssetGuard</title>
+
+  <style>
+    body {
+      margin:0;
+      font-family:'Segoe UI',sans-serif;
+      background:#f4f6fb;
+    }
+
+    .sidebar {
+      width:230px;
+      height:100vh;
+      background:linear-gradient(180deg,#1e1e2f,#2d2d44);
+      color:white;
+      position:fixed;
+      padding:20px;
+    }
+
+    .sidebar h2 { color:#a29bfe; }
+
+    .sidebar li {
+      list-style:none;
+      margin:15px 0;
+      cursor:pointer;
+      padding:10px;
+      border-radius:8px;
+      transition:0.3s;
+    }
+
+    .sidebar li:hover,
+    .active-tab {
+      background:#3a3a5a;
+    }
+
+    .main {
+      margin-left:250px;
+      padding:25px;
+      animation:fadeIn 0.5s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity:0; transform:translateY(10px); }
+      to { opacity:1; transform:translateY(0); }
+    }
+
+    .page { display:none; }
+    .active { display:block; }
+
+    .grid {
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:15px;
+    }
+
+    .card {
+      background:white;
+      padding:18px;
+      border-radius:12px;
+      box-shadow:0 2px 10px rgba(0,0,0,0.06);
+      transition:0.3s;
+    }
+
+    .card:hover {
+      transform:translateY(-3px);
+    }
+
+    .big { grid-column:span 2; }
+
+    .btn {
+      background:#6c5ce7;
+      color:white;
+      padding:10px 15px;
+      border:none;
+      border-radius:8px;
+      cursor:pointer;
+      margin-top:10px;
+      transition:0.3s;
+    }
+
+    .btn:hover { background:#5a4bd6; }
+
+    input,select {
+      width:100%;
+      padding:10px;
+      margin-top:10px;
+      border-radius:6px;
+      border:1px solid #ccc;
+    }
+
+    .alert { color:#e74c3c; font-weight:bold; }
+    .success { color:#2ecc71; font-weight:bold; }
+
+    .loader {
+      border:4px solid #eee;
+      border-top:4px solid #6c5ce7;
+      border-radius:50%;
+      width:30px;
+      height:30px;
+      animation:spin 1s linear infinite;
+      margin-top:10px;
+    }
+
+    @keyframes spin {
+      0% { transform:rotate(0deg); }
+      100% { transform:rotate(360deg); }
+    }
+
+  </style>
+</head>
+
+<body>
+
+<div class="sidebar">
+  <h2>🛡 AssetGuard</h2>
+  <ul>
+    <li onclick="show('dashboard',this)" class="active-tab">Dashboard</li>
+    <li onclick="show('upload',this)">Upload Asset</li>
+    <li onclick="show('scan',this)">Scan & Detect</li>
+    <li onclick="show('alerts',this)">Alerts</li>
+  </ul>
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="page active">
+  <h1>Dashboard</h1>
+
+  <div class="grid">
+    <div class="card">Total Assets<br><b>12</b></div>
+    <div class="card">Scans<br><b>28</b></div>
+    <div class="card">Matches<br><b>5</b></div>
+    <div class="card">Alerts<br><b class="alert">2</b></div>
+
+    <div class="card big">
+      <h3>Recent Activity</h3>
+      <p>Design_logo.png – Protected</p>
+      <p>Project_plan.pdf – Protected</p>
+    </div>
+
+    <div class="card big">
+      <h3>System Status</h3>
+      <p class="success">All systems operational</p>
+    </div>
+  </div>
+</div>
+
+<!-- UPLOAD -->
+<div id="upload" class="page">
+  <h1>Upload Asset</h1>
+
+  <div class="card">
+    <input type="file">
+    <input placeholder="Asset Name">
+    <select>
+      <option>Select Type</option>
+      <option>Image</option>
+      <option>Document</option>
+    </select>
+
+    <button class="btn" onclick="fingerprint()">Upload & Protect</button>
+
+    <div id="uploadLoader" style="display:none;" class="loader"></div>
+    <p id="fp" class="success"></p>
+  </div>
+</div>
+
+<!-- SCAN -->
+<div id="scan" class="page">
+  <h1>Scan & Detect</h1>
+
+  <div class="card">
+    <select>
+      <option>Select Asset</option>
+      <option>Design_logo.png</option>
+    </select>
+
+    <button class="btn" onclick="scan()">Start Scan</button>
+
+    <div id="scanLoader" style="display:none;" class="loader"></div>
+  </div>
+
+  <div class="card" id="results" style="display:none;">
+    <h3 class="alert">⚠ 3 Matches Found</h3>
+    <p>example.com/logo.png – <b>98%</b></p>
+    <p>design-site.net/logo.png – <b>92%</b></p>
+    <p>brand-assets.org/logo.png – <b>85%</b></p>
+  </div>
+</div>
+
+<!-- ALERTS -->
+<div id="alerts" class="page">
+  <h1>Alerts</h1>
+
+  <div class="card">
+    <p class="alert">High: Logo misuse detected</p>
+    <p>Medium: Image match found</p>
+    <p>Low: Document reused</p>
+  </div>
+</div>
+
+</div>
+
+<script>
+function show(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+
+  document.querySelectorAll('.sidebar li').forEach(li => li.classList.remove('active-tab'));
+  el.classList.add('active-tab');
+}
+
+function fingerprint() {
+  document.getElementById("uploadLoader").style.display = "block";
+
+  setTimeout(() => {
+    document.getElementById("uploadLoader").style.display = "none";
+    document.getElementById("fp").innerText =
+      "✔ Asset Protected | Fingerprint: AI-" +
+      Math.random().toString(36).substring(2,10);
+  }, 1500);
+}
+
+function scan() {
+  document.getElementById("scanLoader").style.display = "block";
+
+  setTimeout(() => {
+    document.getElementById("scanLoader").style.display = "none";
+    document.getElementById("results").style.display = "block";
+  }, 2000);
+}
+</script>
+
+</body>
+</html>
